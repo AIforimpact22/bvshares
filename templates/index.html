@@ -38,6 +38,21 @@
     <label>Director salary (€/year)<input type="text" name="director_salary_year" value="{{ defaults.director_salary_year }}"></label>
   </fieldset>
 
+  <fieldset>
+    <legend>RIV Projection (Revenues)</legend>
+    <label>Bootcamp start<input type="date" name="riv_bootcamp_start" value="{{ defaults.riv_bootcamp_start }}"></label>
+    <label>Bootcamps per year<input type="number" step="0.1" name="riv_bootcamp_per_year" value="{{ defaults.riv_bootcamp_per_year }}"></label>
+    <label>Bootcamp RIV per event (€)<input type="text" name="riv_bootcamp_amount" value="{{ defaults.riv_bootcamp_amount }}"></label>
+
+    <label>1:1 sessions start<input type="date" name="riv_coaching_start" value="{{ defaults.riv_coaching_start }}"></label>
+    <label>1:1 sessions per year<input type="number" step="0.1" name="riv_coaching_per_year" value="{{ defaults.riv_coaching_per_year }}"></label>
+    <label>1:1 RIV per session (€)<input type="text" name="riv_coaching_amount" value="{{ defaults.riv_coaching_amount }}"></label>
+
+    <label>LLM subscription start<input type="date" name="riv_llm_start" value="{{ defaults.riv_llm_start }}"></label>
+    <label>LLM active clients<input type="number" step="1" min="0" name="riv_llm_clients" value="{{ defaults.riv_llm_clients }}"></label>
+    <label>LLM subscription (€ / month per client)<input type="text" name="riv_llm_monthly" value="{{ defaults.riv_llm_monthly }}"></label>
+  </fieldset>
+
   <div class="actions">
     <button type="submit">Calculate</button>
   </div>
@@ -56,7 +71,7 @@
       </ul>
       <div class="totals">
         <div><span>Company total (past)</span><strong>{{ display.past_company_total }}</strong></div>
-        <div><span>Partner 40% (past due to join)</span><strong class="highlight">{{ display.past_friend_total }}</strong></div>
+        <div><span>Partner {{ display.inputs.share_pct|float }}% (past due to join)</span><strong class="highlight">{{ display.past_friend_total }}</strong></div>
       </div>
     </div>
 
@@ -69,8 +84,21 @@
       </ul>
       <div class="totals">
         <div><span>Company total (projection)</span><strong>{{ display.proj_company_total }}</strong></div>
-        <div><span>Partner 40% (projection)</span><strong class="highlight">{{ display.proj_friend_total }}</strong></div>
+        <div><span>Partner {{ display.inputs.share_pct|float }}% (projection)</span><strong class="highlight">{{ display.proj_friend_total }}</strong></div>
         <div><span>Avg per month (partner)</span><strong>{{ display.proj_friend_avg_month }}</strong></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>RIV Projection</h3>
+      <ul class="list">
+        {% for k,v in display.riv_components %}
+        <li><span>{{ k }}</span><strong>{{ v }}</strong></li>
+        {% endfor %}
+      </ul>
+      <div class="totals">
+        <div><span>Company revenue (projection)</span><strong>{{ display.riv_company_total }}</strong></div>
+        <div><span>Partner {{ display.inputs.share_pct|float }}% (RIV share)</span><strong class="highlight">{{ display.riv_friend_total }}</strong></div>
       </div>
     </div>
 
@@ -79,7 +107,9 @@
       <ul class="list">
         <li><span>Partner due to join (past)</span><strong class="highlight">{{ display.summary_friend_due_to_join }}</strong></li>
         <li><span>Partner future (projection)</span><strong class="highlight">{{ display.summary_friend_future }}</strong></li>
-        <li><span>Total (past + projection)</span><strong class="highlight big">{{ display.summary_friend_total_all }}</strong></li>
+        <li><span>Total (past + projection)</span><strong class="highlight">{{ display.summary_friend_total_all }}</strong></li>
+        <li><span>Partner share of RIV</span><strong class="highlight">{{ display.summary_friend_riv }}</strong></li>
+        <li><span>Net after RIV</span><strong class="highlight big">{{ display.summary_friend_net }}</strong></li>
       </ul>
       <p class="note">This tool is for planning only; not legal or tax advice.</p>
     </div>

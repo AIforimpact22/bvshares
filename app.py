@@ -68,6 +68,19 @@ def calculate(params):
     legal_fee_date = parse_date(params.get("legal_fee_date"), date(2026, 1, 1))
     director_salary_year = parse_float(params.get("director_salary_year"), 56000.0)
 
+    # RIV projections (revenues)
+    bootcamp_start = parse_date(params.get("riv_bootcamp_start"), projection_start)
+    bootcamp_per_year = parse_float(params.get("riv_bootcamp_per_year"), 4.0)
+    bootcamp_amount = parse_float(params.get("riv_bootcamp_amount"), 7000.0)
+
+    coaching_start = parse_date(params.get("riv_coaching_start"), projection_start)
+    coaching_per_year = parse_float(params.get("riv_coaching_per_year"), 12.0)
+    coaching_amount = parse_float(params.get("riv_coaching_amount"), 900.0)
+
+    llm_start = parse_date(params.get("riv_llm_start"), projection_start)
+    llm_clients = parse_float(params.get("riv_llm_clients"), 1.0)
+    llm_monthly = parse_float(params.get("riv_llm_monthly"), 300.0)
+
     # Defensive: if join_date before calc_start, swap logic for past period (no negative)
     past_period_days = days_inclusive(calc_start, join_date)
 
@@ -121,6 +134,38 @@ def calculate(params):
         "Legal fee within projection window": proj_legal
     }
 
+    # --- RIV revenue projection ---
+    def riv_component(label, start_dt, annual_revenue):
+        if start_dt is None or projection_months <= 0:
+            return label, 0.0
+        if start_dt > proj_end:
+            return label, 0.0
+        active_start = max(start_dt, proj_start)
+        active_days = days_inclusive(active_start, proj_end)
+        if active_days <= 0:
+            return label, 0.0
+        daily_revenue = annual_revenue / 365.25
+        return label, daily_revenue * active_days
+
+    bootcamp_label = "Bootcamps ({:.0f}/yr from {:%d %b %Y})".format(bootcamp_per_year, bootcamp_start)
+    coaching_label = "1:1 sessions ({:.0f}/yr from {:%d %b %Y})".format(coaching_per_year, coaching_start)
+    llm_label = "LLM analysis subscriptions ({:.0f} clients × €{:.0f}/mo from {:%d %b %Y})".format(
+        llm_clients, llm_monthly, llm_start
+    )
+
+    bootcamp_revenue = riv_component(bootcamp_label, bootcamp_start, bootcamp_per_year * bootcamp_amount)
+    coaching_revenue = riv_component(coaching_label, coaching_start, coaching_per_year * coaching_amount)
+    llm_revenue = riv_component(llm_label, llm_start, llm_clients * llm_monthly * 12.0)
+
+    riv_components = {
+        bootcamp_revenue[0]: bootcamp_revenue[1],
+        coaching_revenue[0]: coaching_revenue[1],
+        llm_revenue[0]: llm_revenue[1]
+    }
+
+    riv_total_company = sum(riv_components.values())
+    riv_total_friend = riv_total_company * share_pct
+
     return {
         "inputs": {
             "share_pct": share_pct * 100.0,
@@ -138,7 +183,18 @@ def calculate(params):
             "monthly_ops": monthly_ops,
             "legal_fee": legal_fee,
             "legal_fee_date": legal_fee_date.isoformat() if legal_fee_date else None,
-            "director_salary_year": director_salary_year
+            "director_salary_year": director_salary_year,
+            "riv": {
+                "bootcamp_start": bootcamp_start.isoformat() if bootcamp_start else None,
+                "bootcamp_per_year": bootcamp_per_year,
+                "bootcamp_amount": bootcamp_amount,
+                "coaching_start": coaching_start.isoformat() if coaching_start else None,
+                "coaching_per_year": coaching_per_year,
+                "coaching_amount": coaching_amount,
+                "llm_start": llm_start.isoformat() if llm_start else None,
+                "llm_clients": llm_clients,
+                "llm_monthly": llm_monthly
+            }
         },
         "past": {
             "components": past_components,
@@ -153,12 +209,19 @@ def calculate(params):
             "window": {
                 "start": proj_start.isoformat(),
                 "end": proj_end.isoformat()
+            },
+            "riv": {
+                "components": riv_components,
+                "company_total": riv_total_company,
+                "friend_total": riv_total_friend
             }
         },
         "summary": {
             "friend_due_to_join": past_total_friend,
             "friend_future_{}m".format(projection_months): proj_total_friend,
-            "friend_total_all": past_total_friend + proj_total_friend
+            "friend_total_all": past_total_friend + proj_total_friend,
+            "friend_riv_projection": riv_total_friend,
+            "friend_net_after_riv": past_total_friend + proj_total_friend - riv_total_friend
         }
     }
 
@@ -179,7 +242,16 @@ def index():
         "monthly_ops": "500",
         "legal_fee": "2500",
         "legal_fee_date": "2026-01-15",
-        "director_salary_year": "56000"
+        "director_salary_year": "56000",
+        "riv_bootcamp_start": "2026-02-01",
+        "riv_bootcamp_per_year": "4",
+        "riv_bootcamp_amount": "7000",
+        "riv_coaching_start": "2026-01-15",
+        "riv_coaching_per_year": "20",
+        "riv_coaching_amount": "900",
+        "riv_llm_start": "2026-03-01",
+        "riv_llm_clients": "5",
+        "riv_llm_monthly": "300"
     }
 
     results = None
@@ -208,9 +280,14 @@ def index():
             "proj_friend_total": eur(results["projection"]["friend_total"]),
             "proj_friend_avg_month": eur(results["projection"]["friend_avg_month"]),
             "proj_window": results["projection"]["window"],
+            "riv_components": fmt_components(results["projection"]["riv"]["components"]),
+            "riv_company_total": eur(results["projection"]["riv"]["company_total"]),
+            "riv_friend_total": eur(results["projection"]["riv"]["friend_total"]),
             "summary_friend_due_to_join": eur(results["summary"]["friend_due_to_join"]),
             "summary_friend_future": eur(results["summary"]["friend_future_{}m".format(results['inputs']['projection_months'])]),
-            "summary_friend_total_all": eur(results["summary"]["friend_total_all"])
+            "summary_friend_total_all": eur(results["summary"]["friend_total_all"]),
+            "summary_friend_riv": eur(results["summary"]["friend_riv_projection"]),
+            "summary_friend_net": eur(results["summary"]["friend_net_after_riv"])
         }
 
     return render_template("index.html", defaults=form_values, display=display)
