@@ -1,0 +1,87 @@
+
+{% extends "base.html" %}
+{% block content %}
+<h1>AI4Impact — Simple 40% Share Calculator</h1>
+<p class="subtitle">Calculate your partner's contribution from <strong>1 Sep 2024</strong> and a forward projection.</p>
+
+<form method="post" class="grid">
+  <fieldset>
+    <legend>Share & Key Dates</legend>
+    <label>Partner Share (%)<input type="number" step="0.01" name="share_pct" value="{{ defaults.share_pct }}"></label>
+    <label>Past period start<input type="date" name="calc_start" value="{{ defaults.calc_start }}"></label>
+    <label>Join date (compute past up to)<input type="date" name="join_date" value="{{ defaults.join_date }}"></label>
+    <label>Projection start<input type="date" name="projection_start" value="{{ defaults.projection_start }}"></label>
+    <label>Projection months<input type="number" name="projection_months" value="{{ defaults.projection_months }}"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Past Cash & Asset Values</legend>
+    <label>Past cash spending total (€)<input type="text" name="past_cash_total" value="{{ defaults.past_cash_total }}"></label>
+    <label>Portal valuation (€)<input type="text" name="portal_val" value="{{ defaults.portal_val }}"></label>
+    <label>Finance system valuation (€)<input type="text" name="finance_val" value="{{ defaults.finance_val }}"></label>
+    <label>Website valuation (€)<input type="text" name="website_val" value="{{ defaults.website_val }}"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Ongoing Costs & Legal</legend>
+    <label>Monthly ops cost (€ / month)<input type="text" name="monthly_ops" value="{{ defaults.monthly_ops }}"></label>
+    <label>2026 legal fee (€ one-off)<input type="text" name="legal_fee" value="{{ defaults.legal_fee }}"></label>
+    <label>Legal fee date<input type="date" name="legal_fee_date" value="{{ defaults.legal_fee_date }}"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Director Time (Your Contribution)</legend>
+    <label>Director start date<input type="date" name="director_start" value="{{ defaults.director_start }}"></label>
+    <label>Director salary (€/year)<input type="text" name="director_salary_year" value="{{ defaults.director_salary_year }}"></label>
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit">Calculate</button>
+  </div>
+</form>
+
+{% if display %}
+<section class="results">
+  <h2>Results</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>Past (up to join date)</h3>
+      <ul class="list">
+        {% for k,v in display.past_components %}
+        <li><span>{{ k }}</span><strong>{{ v }}</strong></li>
+        {% endfor %}
+      </ul>
+      <div class="totals">
+        <div><span>Company total (past)</span><strong>{{ display.past_company_total }}</strong></div>
+        <div><span>Partner 40% (past due to join)</span><strong class="highlight">{{ display.past_friend_total }}</strong></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Projection ({{ display.proj_window.start }} → {{ display.proj_window.end }})</h3>
+      <ul class="list">
+        {% for k,v in display.proj_components %}
+        <li><span>{{ k }}</span><strong>{{ v }}</strong></li>
+        {% endfor %}
+      </ul>
+      <div class="totals">
+        <div><span>Company total (projection)</span><strong>{{ display.proj_company_total }}</strong></div>
+        <div><span>Partner 40% (projection)</span><strong class="highlight">{{ display.proj_friend_total }}</strong></div>
+        <div><span>Avg per month (partner)</span><strong>{{ display.proj_friend_avg_month }}</strong></div>
+      </div>
+    </div>
+
+    <div class="card summary">
+      <h3>Summary</h3>
+      <ul class="list">
+        <li><span>Partner due to join (past)</span><strong class="highlight">{{ display.summary_friend_due_to_join }}</strong></li>
+        <li><span>Partner future (projection)</span><strong class="highlight">{{ display.summary_friend_future }}</strong></li>
+        <li><span>Total (past + projection)</span><strong class="highlight big">{{ display.summary_friend_total_all }}</strong></li>
+      </ul>
+      <p class="note">This tool is for planning only; not legal or tax advice.</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
