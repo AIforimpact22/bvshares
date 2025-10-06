@@ -109,6 +109,9 @@ def calculate(params):
     llm_clients = parse_float(params.get("riv_llm_clients"), 1.0)
     llm_monthly = parse_float(params.get("riv_llm_monthly"), 300.0)
 
+    system_sale_date = parse_date(params.get("riv_system_sale_date"), None)
+    system_sale_amount = parse_float(params.get("riv_system_sale_amount"), 0.0)
+
     # Defensive: if join_date before calc_start, swap logic for past period (no negative)
     past_period_days = days_inclusive(calc_start, join_date)
 
@@ -175,20 +178,33 @@ def calculate(params):
         daily_revenue = annual_revenue / 365.25
         return label, daily_revenue * active_days
 
+    def riv_onetime_component(label, event_date, amount):
+        if event_date is None or projection_months <= 0:
+            return label, 0.0
+        if not (proj_start <= event_date <= proj_end):
+            return label, 0.0
+        return label, max(0.0, amount)
+
     bootcamp_label = "Bootcamps ({:.0f}/yr from {:%d %b %Y})".format(bootcamp_per_year, bootcamp_start)
     coaching_label = "1:1 sessions ({:.0f}/yr from {:%d %b %Y})".format(coaching_per_year, coaching_start)
     llm_label = "LLM analysis subscriptions ({:.0f} clients × €{:.0f}/mo from {:%d %b %Y})".format(
         llm_clients, llm_monthly, llm_start
     )
+    if system_sale_date:
+        system_sale_label = "System sale (one-off €{:.0f} on {:%d %b %Y})".format(system_sale_amount, system_sale_date)
+    else:
+        system_sale_label = "System sale (one-off €{:.0f})".format(system_sale_amount)
 
     bootcamp_revenue = riv_component(bootcamp_label, bootcamp_start, bootcamp_per_year * bootcamp_amount)
     coaching_revenue = riv_component(coaching_label, coaching_start, coaching_per_year * coaching_amount)
     llm_revenue = riv_component(llm_label, llm_start, llm_clients * llm_monthly * 12.0)
+    system_sale_revenue = riv_onetime_component(system_sale_label, system_sale_date, system_sale_amount)
 
     riv_components = {
         bootcamp_revenue[0]: bootcamp_revenue[1],
         coaching_revenue[0]: coaching_revenue[1],
-        llm_revenue[0]: llm_revenue[1]
+        llm_revenue[0]: llm_revenue[1],
+        system_sale_revenue[0]: system_sale_revenue[1]
     }
 
     riv_total_company = sum(riv_components.values())
@@ -222,7 +238,9 @@ def calculate(params):
                 "coaching_amount": coaching_amount,
                 "llm_start": llm_start.isoformat() if llm_start else None,
                 "llm_clients": llm_clients,
-                "llm_monthly": llm_monthly
+                "llm_monthly": llm_monthly,
+                "system_sale_date": system_sale_date.isoformat() if system_sale_date else None,
+                "system_sale_amount": system_sale_amount
             }
         },
         "past": {
@@ -297,7 +315,9 @@ def index():
         "riv_coaching_amount": "900",
         "riv_llm_start": "2026-03-01",
         "riv_llm_clients": "5",
-        "riv_llm_monthly": "300"
+        "riv_llm_monthly": "300",
+        "riv_system_sale_date": "2026-06-01",
+        "riv_system_sale_amount": "25000"
     }
 
     results = None

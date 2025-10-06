@@ -66,7 +66,7 @@
   <section class="panel">
     <div class="panel__header">
       <h2 class="panel__title">RIV Projection (Revenues)</h2>
-      <p class="panel__hint">Model incoming revenue streams from bootcamps, 1:1 sessions and subscriptions.</p>
+      <p class="panel__hint">Model incoming revenue streams from bootcamps, 1:1 sessions, subscriptions and one-off sales.</p>
     </div>
     <div class="panel__body">
       <label>Bootcamp start<input type="date" name="riv_bootcamp_start" value="{{ defaults.riv_bootcamp_start }}"></label>
@@ -80,6 +80,9 @@
       <label>LLM subscription start<input type="date" name="riv_llm_start" value="{{ defaults.riv_llm_start }}"></label>
       <label>LLM active clients<input type="number" step="1" min="0" name="riv_llm_clients" value="{{ defaults.riv_llm_clients }}"></label>
       <label>LLM subscription (€ / month per client)<input type="text" name="riv_llm_monthly" value="{{ defaults.riv_llm_monthly }}"></label>
+
+      <label>System sale date<input type="date" name="riv_system_sale_date" value="{{ defaults.riv_system_sale_date }}"></label>
+      <label>System sale revenue (one-off €)<input type="text" name="riv_system_sale_amount" value="{{ defaults.riv_system_sale_amount }}"></label>
     </div>
   </section>
 
