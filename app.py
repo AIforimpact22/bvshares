@@ -47,8 +47,36 @@ def eur(x):
 
 # --------- Core calculator ---------
 def calculate(params):
-    # Inputs
-    share_pct = parse_float(params.get("share_pct", "40")) / 100.0
+    def name_or(value, fallback):
+        value = (value or "").strip()
+        return value if value else fallback
+
+    # Equity & names
+    you_name = name_or(params.get("you_name"), "Hawkar Abdulhaq")
+    partner_name = name_or(params.get("partner_name"), "Mariwan Masoud")
+    pool_name = name_or(params.get("pool_name"), "Open Pool")
+
+    raw_shares = [
+        ("you", you_name, max(0.0, parse_float(params.get("you_pct"), 40.0))),
+        ("partner", partner_name, max(0.0, parse_float(params.get("partner_pct"), 40.0))),
+        ("pool", pool_name, max(0.0, parse_float(params.get("pool_pct"), 20.0))),
+    ]
+    share_total = sum(item[2] for item in raw_shares)
+    if share_total <= 0:
+        raw_shares = [
+            ("you", you_name, 40.0),
+            ("partner", partner_name, 40.0),
+            ("pool", pool_name, 20.0),
+        ]
+        share_total = 100.0
+
+    shares = {}
+    share_order = []
+    for key, label, pct in raw_shares:
+        share_order.append(key)
+        shares[key] = {"name": label, "pct": pct / share_total}
+
+    partner_pct = shares["partner"]["pct"]
 
     # Key dates
     calc_start = parse_date(params.get("calc_start"), date(2024, 9, 1))
@@ -102,7 +130,7 @@ def calculate(params):
 
     # Past totals
     past_total_company = past_cash_total + assets_total + past_ops_cost + past_director_cost + past_legal
-    past_total_friend = past_total_company * share_pct
+    past_total_friend = past_total_company * partner_pct
 
     # --- Projection ---
     proj_start = projection_start
@@ -117,7 +145,7 @@ def calculate(params):
         proj_legal = legal_fee
 
     proj_total_company = proj_ops_cost + proj_director_cost + proj_legal
-    proj_total_friend = proj_total_company * share_pct
+    proj_total_friend = proj_total_company * partner_pct
     proj_avg_month_friend = proj_total_friend / projection_months if projection_months > 0 else 0.0
 
     # Detailed components for display
@@ -164,11 +192,12 @@ def calculate(params):
     }
 
     riv_total_company = sum(riv_components.values())
-    riv_total_friend = riv_total_company * share_pct
+    riv_total_friend = riv_total_company * partner_pct
 
     return {
         "inputs": {
-            "share_pct": share_pct * 100.0,
+            "shares": shares,
+            "share_order": share_order,
             "calc_start": calc_start.isoformat(),
             "join_date": join_date.isoformat(),
             "projection_start": proj_start.isoformat(),
@@ -221,7 +250,19 @@ def calculate(params):
             "friend_future_{}m".format(projection_months): proj_total_friend,
             "friend_total_all": past_total_friend + proj_total_friend,
             "friend_riv_projection": riv_total_friend,
-            "friend_net_after_riv": past_total_friend + proj_total_friend - riv_total_friend
+            "friend_net_after_riv": past_total_friend + proj_total_friend - riv_total_friend,
+            "projection_company_revenue": riv_total_company,
+            "projection_share_rows": [
+                {
+                    "key": key,
+                    "name": shares[key]["name"],
+                    "pct": shares[key]["pct"],
+                    "revenue": riv_total_company * shares[key]["pct"],
+                    "cost": proj_total_company * shares[key]["pct"],
+                    "net": riv_total_company * shares[key]["pct"] - proj_total_company * shares[key]["pct"],
+                }
+                for key in share_order
+            ]
         }
     }
 
@@ -229,7 +270,12 @@ def calculate(params):
 def index():
     # Defaults
     base_defaults = {
-        "share_pct": "40",
+        "you_name": "Hawkar Abdulhaq",
+        "partner_name": "Mariwan Masoud",
+        "pool_name": "Open Pool",
+        "you_pct": "40",
+        "partner_pct": "40",
+        "pool_pct": "20",
         "calc_start": "2024-09-01",
         "join_date": date.today().isoformat(),
         "projection_start": "2026-01-01",
@@ -272,6 +318,13 @@ def index():
     if results:
         display = {
             "inputs": results["inputs"],
+            "share_info": {
+                key: {
+                    "name": data["name"],
+                    "pct": f"{data['pct'] * 100:.1f}"
+                }
+                for key, data in results["inputs"]["shares"].items()
+            },
             "past_components": fmt_components(results["past"]["components"]),
             "past_company_total": eur(results["past"]["company_total"]),
             "past_friend_total": eur(results["past"]["friend_total"]),
@@ -287,7 +340,24 @@ def index():
             "summary_friend_future": eur(results["summary"]["friend_future_{}m".format(results['inputs']['projection_months'])]),
             "summary_friend_total_all": eur(results["summary"]["friend_total_all"]),
             "summary_friend_riv": eur(results["summary"]["friend_riv_projection"]),
-            "summary_friend_net": eur(results["summary"]["friend_net_after_riv"])
+            "summary_friend_net": eur(results["summary"]["friend_net_after_riv"]),
+            "summary_friend_net_value": results["summary"]["friend_net_after_riv"],
+            "projection_company_revenue": eur(results["summary"]["projection_company_revenue"]),
+            "projection_company_cost": eur(results["projection"]["company_total"]),
+            "projection_company_net": eur(results["summary"]["projection_company_revenue"] - results["projection"]["company_total"]),
+            "projection_company_net_value": results["summary"]["projection_company_revenue"] - results["projection"]["company_total"],
+            "summary_projection_rows": [
+                {
+                    "key": row["key"],
+                    "name": row["name"],
+                    "pct": f"{row['pct'] * 100:.1f}%",
+                    "revenue": eur(row["revenue"]),
+                    "cost": eur(row["cost"]),
+                    "net": eur(row["net"]),
+                    "net_value": row["net"],
+                }
+                for row in results["summary"]["projection_share_rows"]
+            ]
         }
 
     return render_template("index.html", defaults=form_values, display=display)

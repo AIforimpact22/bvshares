@@ -14,6 +14,7 @@
       --accent:#9ad1ff;
       --accent-strong:#4db8ff;
       --ok:#9cffac;
+      --warn:#ff9c9c;
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
@@ -39,6 +40,13 @@
     .highlight{color:var(--ok);font-weight:700}
     .big{font-size:1.25rem}
     .summary .note{color:var(--muted);font-size:.85rem;margin-top:.5rem}
+    .summary .totals.overall{margin-top:1rem;border-top:1px solid #253545;padding-top:.8rem;gap:.45rem}
+    .share-table{width:100%;border-collapse:collapse;margin-top:.75rem;font-size:.9rem}
+    .share-table th,.share-table td{padding:.45rem .5rem;border-bottom:1px solid #253545;text-align:left}
+    .share-table th{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+    .share-table td.numeric{text-align:right;font-variant-numeric:tabular-nums}
+    .positive{color:var(--ok);font-weight:600}
+    .negative{color:var(--warn);font-weight:600}
   </style>
   {% endblock %}
 </head>
