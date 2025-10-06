@@ -7,56 +7,81 @@
 <h1>AI4Impact — Equity Share Planner</h1>
 <p class="subtitle">Model contributions and revenue sharing for <strong>{{ defaults.you_name }}</strong>, <strong>{{ defaults.partner_name }}</strong> and the open pool.</p>
 
-<form method="post" class="grid">
-  <fieldset>
-    <legend>Share & Key Dates</legend>
-    <label>Your name<input type="text" name="you_name" value="{{ defaults.you_name }}"></label>
-    <label>Partner name<input type="text" name="partner_name" value="{{ defaults.partner_name }}"></label>
-    <label>Open pool label<input type="text" name="pool_name" value="{{ defaults.pool_name }}"></label>
-    <label>{{ defaults.you_name }} equity (%)<input type="number" step="0.01" name="you_pct" value="{{ defaults.you_pct }}"></label>
-    <label>{{ defaults.partner_name }} equity (%)<input type="number" step="0.01" name="partner_pct" value="{{ defaults.partner_pct }}"></label>
-    <label>{{ defaults.pool_name }} equity (%)<input type="number" step="0.01" name="pool_pct" value="{{ defaults.pool_pct }}"></label>
-    <label>Past period start<input type="date" name="calc_start" value="{{ defaults.calc_start }}"></label>
-    <label>Join date (compute past up to)<input type="date" name="join_date" value="{{ defaults.join_date }}"></label>
-    <label>Projection start<input type="date" name="projection_start" value="{{ defaults.projection_start }}"></label>
-    <label>Projection months<input type="number" name="projection_months" value="{{ defaults.projection_months }}"></label>
-  </fieldset>
+<form method="post" class="flow">
+  <section class="panel">
+    <div class="panel__header">
+      <h2 class="panel__title">Share &amp; Key Dates</h2>
+      <p class="panel__hint">Set participant names, equity allocations and the timeline for the projection.</p>
+    </div>
+    <div class="panel__body">
+      <label>Your name<input type="text" name="you_name" value="{{ defaults.you_name }}"></label>
+      <label>Partner name<input type="text" name="partner_name" value="{{ defaults.partner_name }}"></label>
+      <label>Open pool label<input type="text" name="pool_name" value="{{ defaults.pool_name }}"></label>
+      <label>{{ defaults.you_name }} equity (%)<input type="number" step="0.01" name="you_pct" value="{{ defaults.you_pct }}"></label>
+      <label>{{ defaults.partner_name }} equity (%)<input type="number" step="0.01" name="partner_pct" value="{{ defaults.partner_pct }}"></label>
+      <label>{{ defaults.pool_name }} equity (%)<input type="number" step="0.01" name="pool_pct" value="{{ defaults.pool_pct }}"></label>
+      <label>Past period start<input type="date" name="calc_start" value="{{ defaults.calc_start }}"></label>
+      <label>Join date (compute past up to)<input type="date" name="join_date" value="{{ defaults.join_date }}"></label>
+      <label>Projection start<input type="date" name="projection_start" value="{{ defaults.projection_start }}"></label>
+      <label>Projection months<input type="number" name="projection_months" value="{{ defaults.projection_months }}"></label>
+    </div>
+  </section>
 
-  <fieldset>
-    <legend>Past Cash & Asset Values</legend>
-    <label>Past cash spending total (€)<input type="text" name="past_cash_total" value="{{ defaults.past_cash_total }}"></label>
-    <label>Portal valuation (€)<input type="text" name="portal_val" value="{{ defaults.portal_val }}"></label>
-    <label>Finance system valuation (€)<input type="text" name="finance_val" value="{{ defaults.finance_val }}"></label>
-    <label>Website valuation (€)<input type="text" name="website_val" value="{{ defaults.website_val }}"></label>
-  </fieldset>
+  <section class="panel">
+    <div class="panel__header">
+      <h2 class="panel__title">Past Cash &amp; Asset Values</h2>
+      <p class="panel__hint">Capture historic investments already made in the company.</p>
+    </div>
+    <div class="panel__body">
+      <label>Past cash spending total (€)<input type="text" name="past_cash_total" value="{{ defaults.past_cash_total }}"></label>
+      <label>Portal valuation (€)<input type="text" name="portal_val" value="{{ defaults.portal_val }}"></label>
+      <label>Finance system valuation (€)<input type="text" name="finance_val" value="{{ defaults.finance_val }}"></label>
+      <label>Website valuation (€)<input type="text" name="website_val" value="{{ defaults.website_val }}"></label>
+    </div>
+  </section>
 
-  <fieldset>
-    <legend>Ongoing Costs & Legal</legend>
-    <label>Monthly ops cost (€ / month)<input type="text" name="monthly_ops" value="{{ defaults.monthly_ops }}"></label>
-    <label>2026 legal fee (€ one-off)<input type="text" name="legal_fee" value="{{ defaults.legal_fee }}"></label>
-    <label>Legal fee date<input type="date" name="legal_fee_date" value="{{ defaults.legal_fee_date }}"></label>
-  </fieldset>
+  <section class="panel">
+    <div class="panel__header">
+      <h2 class="panel__title">Ongoing Costs &amp; Legal</h2>
+      <p class="panel__hint">Plan for operational expenses and known one-off legal costs.</p>
+    </div>
+    <div class="panel__body">
+      <label>Monthly ops cost (€ / month)<input type="text" name="monthly_ops" value="{{ defaults.monthly_ops }}"></label>
+      <label>2026 legal fee (€ one-off)<input type="text" name="legal_fee" value="{{ defaults.legal_fee }}"></label>
+      <label>Legal fee date<input type="date" name="legal_fee_date" value="{{ defaults.legal_fee_date }}"></label>
+    </div>
+  </section>
 
-  <fieldset>
-    <legend>Director Time (Your Contribution)</legend>
-    <label>Director start date<input type="date" name="director_start" value="{{ defaults.director_start }}"></label>
-    <label>Director salary (€/year)<input type="text" name="director_salary_year" value="{{ defaults.director_salary_year }}"></label>
-  </fieldset>
+  <section class="panel">
+    <div class="panel__header">
+      <h2 class="panel__title">Director Time (Your Contribution)</h2>
+      <p class="panel__hint">Estimate the commitment and remuneration for your director role.</p>
+    </div>
+    <div class="panel__body">
+      <label>Director start date<input type="date" name="director_start" value="{{ defaults.director_start }}"></label>
+      <label>Director salary (€/year)<input type="text" name="director_salary_year" value="{{ defaults.director_salary_year }}"></label>
+    </div>
+  </section>
 
-  <fieldset>
-    <legend>RIV Projection (Revenues)</legend>
-    <label>Bootcamp start<input type="date" name="riv_bootcamp_start" value="{{ defaults.riv_bootcamp_start }}"></label>
-    <label>Bootcamps per year<input type="number" step="0.1" name="riv_bootcamp_per_year" value="{{ defaults.riv_bootcamp_per_year }}"></label>
-    <label>Bootcamp RIV per event (€)<input type="text" name="riv_bootcamp_amount" value="{{ defaults.riv_bootcamp_amount }}"></label>
+  <section class="panel">
+    <div class="panel__header">
+      <h2 class="panel__title">RIV Projection (Revenues)</h2>
+      <p class="panel__hint">Model incoming revenue streams from bootcamps, 1:1 sessions and subscriptions.</p>
+    </div>
+    <div class="panel__body">
+      <label>Bootcamp start<input type="date" name="riv_bootcamp_start" value="{{ defaults.riv_bootcamp_start }}"></label>
+      <label>Bootcamps per year<input type="number" step="0.1" name="riv_bootcamp_per_year" value="{{ defaults.riv_bootcamp_per_year }}"></label>
+      <label>Bootcamp RIV per event (€)<input type="text" name="riv_bootcamp_amount" value="{{ defaults.riv_bootcamp_amount }}"></label>
 
-    <label>1:1 sessions start<input type="date" name="riv_coaching_start" value="{{ defaults.riv_coaching_start }}"></label>
-    <label>1:1 sessions per year<input type="number" step="0.1" name="riv_coaching_per_year" value="{{ defaults.riv_coaching_per_year }}"></label>
-    <label>1:1 RIV per session (€)<input type="text" name="riv_coaching_amount" value="{{ defaults.riv_coaching_amount }}"></label>
+      <label>1:1 sessions start<input type="date" name="riv_coaching_start" value="{{ defaults.riv_coaching_start }}"></label>
+      <label>1:1 sessions per year<input type="number" step="0.1" name="riv_coaching_per_year" value="{{ defaults.riv_coaching_per_year }}"></label>
+      <label>1:1 RIV per session (€)<input type="text" name="riv_coaching_amount" value="{{ defaults.riv_coaching_amount }}"></label>
 
-    <label>LLM subscription start<input type="date" name="riv_llm_start" value="{{ defaults.riv_llm_start }}"></label>
-    <label>LLM active clients<input type="number" step="1" min="0" name="riv_llm_clients" value="{{ defaults.riv_llm_clients }}"></label>
-    <label>LLM subscription (€ / month per client)<input type="text" name="riv_llm_monthly" value="{{ defaults.riv_llm_monthly }}"></label>
-  </fieldset>
+      <label>LLM subscription start<input type="date" name="riv_llm_start" value="{{ defaults.riv_llm_start }}"></label>
+      <label>LLM active clients<input type="number" step="1" min="0" name="riv_llm_clients" value="{{ defaults.riv_llm_clients }}"></label>
+      <label>LLM subscription (€ / month per client)<input type="text" name="riv_llm_monthly" value="{{ defaults.riv_llm_monthly }}"></label>
+    </div>
+  </section>
 
   <div class="actions">
     <button type="submit">Calculate</button>
@@ -66,8 +91,8 @@
 {% if display %}
 <section class="results">
   <h2>Results</h2>
-  <div class="cards">
-    <div class="card">
+  <div class="timeline">
+    <article class="timeline__card">
       <h3>Past (up to join date)</h3>
       <ul class="list">
         {% for k,v in display.past_components %}
@@ -78,9 +103,9 @@
         <div><span>Company total (past)</span><strong>{{ display.past_company_total }}</strong></div>
         <div><span>{{ display.share_info.partner.name }} ({{ display.share_info.partner.pct }}%) — past due to join</span><strong class="highlight">{{ display.past_friend_total }}</strong></div>
       </div>
-    </div>
+    </article>
 
-    <div class="card">
+    <article class="timeline__card">
       <h3>Projection ({{ display.proj_window.start }} → {{ display.proj_window.end }})</h3>
       <ul class="list">
         {% for k,v in display.proj_components %}
@@ -92,9 +117,9 @@
         <div><span>{{ display.share_info.partner.name }} ({{ display.share_info.partner.pct }}%) — cost share</span><strong class="highlight">{{ display.proj_friend_total }}</strong></div>
         <div><span>Avg per month ({{ display.share_info.partner.name }})</span><strong>{{ display.proj_friend_avg_month }}</strong></div>
       </div>
-    </div>
+    </article>
 
-    <div class="card">
+    <article class="timeline__card">
       <h3>RIV Projection</h3>
       <ul class="list">
         {% for k,v in display.riv_components %}
@@ -105,9 +130,9 @@
         <div><span>Company revenue (projection)</span><strong>{{ display.riv_company_total }}</strong></div>
         <div><span>{{ display.share_info.partner.name }} ({{ display.share_info.partner.pct }}%) — revenue share</span><strong class="highlight">{{ display.riv_friend_total }}</strong></div>
       </div>
-    </div>
+    </article>
 
-    <div class="card summary">
+    <article class="timeline__card summary">
       <h3>Summary</h3>
       <ul class="list">
         <li><span>{{ display.share_info.partner.name }} — past due to join</span><strong class="highlight">{{ display.summary_friend_due_to_join }}</strong></li>
@@ -147,7 +172,7 @@
         {% endfor %}
       </div>
       <p class="note">This tool is for planning only; not legal or tax advice.</p>
-    </div>
+    </article>
   </div>
 </section>
 {% endif %}
