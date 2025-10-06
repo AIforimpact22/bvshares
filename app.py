@@ -165,7 +165,7 @@ def calculate(params):
 @app.route("/", methods=["GET", "POST"])
 def index():
     # Defaults
-    defaults = {
+    base_defaults = {
         "share_pct": "40",
         "calc_start": "2024-09-01",
         "join_date": date.today().isoformat(),
@@ -183,12 +183,14 @@ def index():
     }
 
     results = None
+    form_values = dict(base_defaults)
     if request.method == "POST":
-        params = {k: request.form.get(k, "") for k in defaults.keys()}
+        params = {k: request.form.get(k, "") for k in base_defaults.keys()}
+        form_values.update(params)
         results = calculate(params)
     else:
         # On GET, pre-calc with defaults so page shows numbers immediately
-        results = calculate(defaults)
+        results = calculate(base_defaults)
 
     # Format for display
     def fmt_components(d):
@@ -211,7 +213,7 @@ def index():
             "summary_friend_total_all": eur(results["summary"]["friend_total_all"])
         }
 
-    return render_template("index.html", defaults=defaults, display=display)
+    return render_template("index.html", defaults=form_values, display=display)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
