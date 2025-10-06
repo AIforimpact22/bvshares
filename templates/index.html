@@ -1,16 +1,21 @@
 {% extends "base.html" %}
-{% block title %}AI4Impact — Simple 40% Share Calculator{% endblock %}
+{% block title %}AI4Impact — Equity Share Planner{% endblock %}
 {% block head %}
   {{ super() }}
 {% endblock %}
 {% block content %}
-<h1>AI4Impact — Simple 40% Share Calculator</h1>
-<p class="subtitle">Calculate your partner's contribution from <strong>1 Sep 2024</strong> and a forward projection.</p>
+<h1>AI4Impact — Equity Share Planner</h1>
+<p class="subtitle">Model contributions and revenue sharing for <strong>{{ defaults.you_name }}</strong>, <strong>{{ defaults.partner_name }}</strong> and the open pool.</p>
 
 <form method="post" class="grid">
   <fieldset>
     <legend>Share & Key Dates</legend>
-    <label>Partner Share (%)<input type="number" step="0.01" name="share_pct" value="{{ defaults.share_pct }}"></label>
+    <label>Your name<input type="text" name="you_name" value="{{ defaults.you_name }}"></label>
+    <label>Partner name<input type="text" name="partner_name" value="{{ defaults.partner_name }}"></label>
+    <label>Open pool label<input type="text" name="pool_name" value="{{ defaults.pool_name }}"></label>
+    <label>{{ defaults.you_name }} equity (%)<input type="number" step="0.01" name="you_pct" value="{{ defaults.you_pct }}"></label>
+    <label>{{ defaults.partner_name }} equity (%)<input type="number" step="0.01" name="partner_pct" value="{{ defaults.partner_pct }}"></label>
+    <label>{{ defaults.pool_name }} equity (%)<input type="number" step="0.01" name="pool_pct" value="{{ defaults.pool_pct }}"></label>
     <label>Past period start<input type="date" name="calc_start" value="{{ defaults.calc_start }}"></label>
     <label>Join date (compute past up to)<input type="date" name="join_date" value="{{ defaults.join_date }}"></label>
     <label>Projection start<input type="date" name="projection_start" value="{{ defaults.projection_start }}"></label>
@@ -71,7 +76,7 @@
       </ul>
       <div class="totals">
         <div><span>Company total (past)</span><strong>{{ display.past_company_total }}</strong></div>
-        <div><span>Partner {{ display.inputs.share_pct|float }}% (past due to join)</span><strong class="highlight">{{ display.past_friend_total }}</strong></div>
+        <div><span>{{ display.share_info.partner.name }} ({{ display.share_info.partner.pct }}%) — past due to join</span><strong class="highlight">{{ display.past_friend_total }}</strong></div>
       </div>
     </div>
 
@@ -84,8 +89,8 @@
       </ul>
       <div class="totals">
         <div><span>Company total (projection)</span><strong>{{ display.proj_company_total }}</strong></div>
-        <div><span>Partner {{ display.inputs.share_pct|float }}% (projection)</span><strong class="highlight">{{ display.proj_friend_total }}</strong></div>
-        <div><span>Avg per month (partner)</span><strong>{{ display.proj_friend_avg_month }}</strong></div>
+        <div><span>{{ display.share_info.partner.name }} ({{ display.share_info.partner.pct }}%) — cost share</span><strong class="highlight">{{ display.proj_friend_total }}</strong></div>
+        <div><span>Avg per month ({{ display.share_info.partner.name }})</span><strong>{{ display.proj_friend_avg_month }}</strong></div>
       </div>
     </div>
 
@@ -98,19 +103,47 @@
       </ul>
       <div class="totals">
         <div><span>Company revenue (projection)</span><strong>{{ display.riv_company_total }}</strong></div>
-        <div><span>Partner {{ display.inputs.share_pct|float }}% (RIV share)</span><strong class="highlight">{{ display.riv_friend_total }}</strong></div>
+        <div><span>{{ display.share_info.partner.name }} ({{ display.share_info.partner.pct }}%) — revenue share</span><strong class="highlight">{{ display.riv_friend_total }}</strong></div>
       </div>
     </div>
 
     <div class="card summary">
       <h3>Summary</h3>
       <ul class="list">
-        <li><span>Partner due to join (past)</span><strong class="highlight">{{ display.summary_friend_due_to_join }}</strong></li>
-        <li><span>Partner future (projection)</span><strong class="highlight">{{ display.summary_friend_future }}</strong></li>
-        <li><span>Total (past + projection)</span><strong class="highlight">{{ display.summary_friend_total_all }}</strong></li>
-        <li><span>Partner share of RIV</span><strong class="highlight">{{ display.summary_friend_riv }}</strong></li>
-        <li><span>Net after RIV</span><strong class="highlight big">{{ display.summary_friend_net }}</strong></li>
+        <li><span>{{ display.share_info.partner.name }} — past due to join</span><strong class="highlight">{{ display.summary_friend_due_to_join }}</strong></li>
+        <li><span>{{ display.share_info.partner.name }} — projection cost share</span><strong class="highlight">{{ display.summary_friend_future }}</strong></li>
+        <li><span>Total before projection revenues</span><strong class="highlight">{{ display.summary_friend_total_all }}</strong></li>
+        <li><span>{{ display.share_info.partner.name }} — projection revenue share</span><strong class="highlight">{{ display.summary_friend_riv }}</strong></li>
+        <li><span>Net after RIV</span><strong class="highlight big {% if display.summary_friend_net_value < 0 %}negative{% else %}positive{% endif %}">{{ display.summary_friend_net }}</strong></li>
       </ul>
+      <div class="totals overall">
+        <div><span>Projection cost (company)</span><strong>{{ display.projection_company_cost }}</strong></div>
+        <div><span>Projection revenue (company)</span><strong>{{ display.projection_company_revenue }}</strong></div>
+        <div><span>Company net (revenue − cost)</span><strong class="{% if display.projection_company_net_value < 0 %}negative{% else %}positive{% endif %}">{{ display.projection_company_net }}</strong></div>
+      </div>
+      <h4>Projection share breakdown</h4>
+      <table class="share-table">
+        <thead>
+          <tr>
+            <th>Stakeholder</th>
+            <th>Equity %</th>
+            <th class="numeric">Revenue share</th>
+            <th class="numeric">Cost share</th>
+            <th class="numeric">Net</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in display.summary_projection_rows %}
+          <tr>
+            <th scope="row">{{ row.name }}</th>
+            <td>{{ row.pct }}</td>
+            <td class="numeric">{{ row.revenue }}</td>
+            <td class="numeric">{{ row.cost }}</td>
+            <td class="numeric {% if row.net_value < 0 %}negative{% else %}positive{% endif %}">{{ row.net }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
       <p class="note">This tool is for planning only; not legal or tax advice.</p>
     </div>
   </div>
